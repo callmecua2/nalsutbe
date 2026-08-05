@@ -11,7 +11,8 @@ function slugify(text: string): string {
 
 export async function POST(request: Request) {
   try {
-    const { title, description, pubDate, heroImage, content } = await request.json();
+    const body = await request.json();
+    const { title, description, pubDate, heroImage, content } = body;
 
     if (!title || !content) {
       return NextResponse.json(
@@ -27,7 +28,7 @@ export async function POST(request: Request) {
 
     if (!token || !owner || !repo) {
       return NextResponse.json(
-        { error: 'Konfigurasi GitHub API belum lengkap di .env.local.' },
+        { error: 'Variabel GITHUB_TOKEN, GITHUB_OWNER, atau GITHUB_REPO belum diset di .env.local.' },
         { status: 500 }
       );
     }
@@ -35,7 +36,6 @@ export async function POST(request: Request) {
     const slug = slugify(title);
     const dateStr = pubDate || new Date().toISOString().split('T')[0];
 
-    // Format Frontmatter + Body HTML/Markdown
     const markdownContent = `---
 title: '${title.replace(/'/g, "''")}'
 description: '${(description || '').replace(/'/g, "''")}'
@@ -46,15 +46,13 @@ ${heroImage ? `heroImage: '${heroImage}'` : ''}
 ${content}
 `;
 
-    // Path target di repository Astro (sesuaikan jika folder content collections berbeda)
     const filePath = `src/content/blog/${slug}.md`;
     const githubApiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
-
-    // Encode konten ke Base64 (wajib untuk GitHub API)
     const encodedContent = Buffer.from(markdownContent, 'utf-8').toString('base64');
 
-    // Cek apakah file sudah ada di repo (untuk mendapatkan SHA jika ini update)
     let sha: string | undefined;
+
+    // Cek keberadaan file
     const checkFileRes = await fetch(`${githubApiUrl}?ref=${branch}`, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -68,7 +66,7 @@ ${content}
       sha = fileData.sha;
     }
 
-    // Commit file ke GitHub
+    // Commit ke GitHub
     const commitRes = await fetch(githubApiUrl, {
       method: 'PUT',
       headers: {
@@ -84,15 +82,14 @@ ${content}
       }),
     });
 
+    const commitData = await commitRes.json();
+
     if (!commitRes.ok) {
-      const errorData = await commitRes.json();
       return NextResponse.json(
-        { error: errorData.message || 'Gagal menyimpan file ke GitHub.' },
+        { error: commitData.message || `GitHub API Error (${commitRes.status})` },
         { status: commitRes.status }
       );
     }
-
-    const commitData = await commitRes.json();
 
     return NextResponse.json({
       success: true,
@@ -102,8 +99,9 @@ ${content}
     });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
+    console.error('API Route Error:', error);
     return NextResponse.json(
-      { error: error.message || 'Internal Server Error' },
+      { error: error.message || 'Internal Server Error pada Next.js Backend.' },
       { status: 500 }
     );
   }

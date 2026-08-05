@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import 'react-quill-new/dist/quill.snow.css';
 import './editor.css';
+import Toast from '../UI/Toast/Toast';
 
 const ReactQuill = dynamic(
   async () => {
@@ -82,9 +84,27 @@ export default function ArticleEditor() {
   const [content, setContent] = useState('');
   const [isPublishing, setIsPublishing] = useState(false);
 
+
+  // State untuk Toast Notification
+  const [toast, setToast] = useState<{
+    show: boolean;
+    type: 'success' | 'error';
+    title: string;
+    message: string;
+  }>({
+    show: false,
+    type: 'success',
+    title: '',
+    message: '',
+  });
+
+  const showToast = (type: 'success' | 'error', title: string, message: string) => {
+    setToast({ show: true, type, title, message });
+  };
+
 const handlePublish = async () => {
     if (!title.trim() || !content.trim()) {
-      alert('Judul dan konten tidak boleh kosong.');
+      showToast('error', 'Validasi Gagal', 'Judul dan konten artikel tidak boleh kosong.');
       return;
     }
 
@@ -98,25 +118,36 @@ const handlePublish = async () => {
         },
         body: JSON.stringify({
           title,
-          description: '', // Tambahkan state description jika ada input terpisah
+          description: '',
           pubDate: new Date().toISOString().split('T')[0],
-          heroImage: '', // URL gambar hero jika ada
+          heroImage: '',
           content,
         }),
       });
 
-      const result = await response.json();
+      const rawText = await response.text();
+      let result;
+
+      try {
+        result = JSON.parse(rawText);
+      } catch (e) {
+        throw new Error(`Server Error (${response.status}). Silakan periksa log server.`);
+      }
 
       if (!response.ok) {
         throw new Error(result.error || 'Gagal mempublikasikan artikel.');
       }
 
-      alert('Artikel berhasil dipublikasikan ke GitHub!');
+      showToast(
+        'success',
+        'Artikel Dipublikasikan',
+        'File markdown berhasil di-commit dan dikirim ke repository GitHub.'
+      );
+
       setTitle('');
       setContent('');
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      alert(`Error: ${err.message}`);
+      showToast('error', 'Gagal Mempublikasikan', err.message);
     } finally {
       setIsPublishing(false);
     }
@@ -124,6 +155,17 @@ const handlePublish = async () => {
 
   return (
     <div className="editor-container">
+
+{/* Toast Notification Container */}
+      {toast.show && (
+        <Toast
+          type={toast.type}
+          title={toast.title}
+          message={toast.message}
+          onClose={() => setToast((prev) => ({ ...prev, show: false }))}
+        />
+      )}
+
       {/* Header Controls */}
       <div className="editor-header">
         <span className="draft-badge">Draft</span>
