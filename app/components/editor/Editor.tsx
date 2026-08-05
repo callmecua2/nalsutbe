@@ -3,16 +3,53 @@
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import 'react-quill-new/dist/quill.snow.css';
-import './editor.css'; // Import file CSS biasa
+import './editor.css';
 
-const ReactQuill = dynamic(() => import('react-quill-new'), {
-  ssr: false,
-  loading: () => (
-    <div className="editor-skeleton">
-      Memuat Editor...
-    </div>
-  ),
-});
+const ReactQuill = dynamic(
+  async () => {
+    const { default: RQ, Quill } = await import('react-quill-new');
+
+    const ImageResize = (await import('quill-image-resize-module-react')).default;
+    Quill.register('modules/imageResize', ImageResize);
+
+    // Register Custom Image Blot untuk mempertahankan atribut width, style, class, & alt
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const ImageBlot = Quill.import('formats/image') as any;
+
+    class AttributedImage extends ImageBlot {
+      static create(value: string | Record<string, string>) {
+        const node = super.create(typeof value === 'string' ? value : value.src);
+        if (typeof value === 'object') {
+          if (value.alt) node.setAttribute('alt', value.alt);
+          if (value.width) node.setAttribute('width', value.width);
+          if (value.style) node.setAttribute('style', value.style);
+          if (value.class) node.setAttribute('class', value.class);
+        }
+        return node;
+      }
+
+      static value(node: HTMLElement) {
+        return {
+          src: node.getAttribute('src'),
+          alt: node.getAttribute('alt'),
+          width: node.getAttribute('width'),
+          style: node.getAttribute('style'),
+          class: node.getAttribute('class'),
+        };
+      }
+    }
+
+    AttributedImage.blotName = 'image';
+    AttributedImage.tagName = 'IMG';
+    Quill.register(AttributedImage, true);
+
+    return RQ;
+  },
+  {
+    ssr: false,
+    loading: () => <div className="editor-skeleton">Memuat Editor...</div>,
+  }
+);
 
 const modules = {
   toolbar: [
@@ -22,6 +59,10 @@ const modules = {
     ['link', 'image'],
     ['clean'],
   ],
+  imageResize: {
+    parchment: null,
+    modules: ['Resize', 'DisplaySize', 'Toolbar'],
+  },
 };
 
 const formats = [
@@ -31,9 +72,9 @@ const formats = [
   'underline',
   'strike',
   'blockquote',
-  'list', // <-- Cukup gunakan 'list' untuk menangani bullet & ordered
+  'list',
   'link',
-  'image',
+  'image', // Cukup 'image', atribut internalnya otomatis diproses oleh AttributedImage
 ];
 
 export default function ArticleEditor() {
@@ -90,7 +131,6 @@ export default function ArticleEditor() {
           placeholder="Mulai menulis cerita Anda..."
         />
       </div>
-
     </div>
   );
 }

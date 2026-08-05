@@ -1,6 +1,5 @@
 /* Container Layout */
 .editor-container {
-  /* Default untuk layar HP (di bawah 640px): penuhi lebar layar */
   width: 92%; 
   margin: 1.5rem auto;
   padding: 1.25rem;
@@ -87,7 +86,7 @@
   color: #d1d5db;
 }
 
-/* Quill Editor Wrapper dengan Border Terpisah */
+/* Quill Editor Wrapper */
 .quill-minimal-wrapper {
   border: 1px solid #d1d5db;
   border-radius: 0.5rem;
@@ -119,10 +118,41 @@
   font-style: normal;
 }
 
+/* Styling Gambar & Alignment Dalam Editor */
+.quill-minimal-wrapper .ql-editor img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.quill-minimal-wrapper .ql-editor img.alignleft {
+  float: left;
+  margin: 0 1.5rem 1rem 0;
+  max-width: 50%;
+}
+
+.quill-minimal-wrapper .ql-editor img.alignright {
+  float: right;
+  margin: 0 0 1rem 1.5rem;
+  max-width: 50%;
+}
+
+.quill-minimal-wrapper .ql-editor img.aligncenter {
+  display: block;
+  margin: 1.5rem auto;
+}
+
+.quill-minimal-wrapper .ql-editor p::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
 @media (min-width: 640px) {
   .editor-container {
-    width: 75vw; /* Paten 3/4 dari lebar viewport */
-    max-width: none; /* Matikan max-width lama agar tidak tertahan di 56rem */
+    width: 75vw;
+    max-width: none;
     margin: 2rem auto;
     padding: 2rem;
   }
