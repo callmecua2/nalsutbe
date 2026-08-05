@@ -82,19 +82,44 @@ export default function ArticleEditor() {
   const [content, setContent] = useState('');
   const [isPublishing, setIsPublishing] = useState(false);
 
-  const handlePublish = async () => {
+const handlePublish = async () => {
     if (!title.trim() || !content.trim()) {
       alert('Judul dan konten tidak boleh kosong.');
       return;
     }
 
     setIsPublishing(true);
-    console.log({ title, content });
 
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/publish', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title,
+          description: '', // Tambahkan state description jika ada input terpisah
+          pubDate: new Date().toISOString().split('T')[0],
+          heroImage: '', // URL gambar hero jika ada
+          content,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Gagal mempublikasikan artikel.');
+      }
+
+      alert('Artikel berhasil dipublikasikan ke GitHub!');
+      setTitle('');
+      setContent('');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      alert(`Error: ${err.message}`);
+    } finally {
       setIsPublishing(false);
-      alert('Artikel berhasil disimpan!');
-    }, 1000);
+    }
   };
 
   return (
