@@ -14,8 +14,6 @@ const ReactQuill = dynamic(
     const ImageResize = (await import('quill-image-resize-module-react')).default;
     Quill.register('modules/imageResize', ImageResize);
 
-    // Register Custom Image Blot untuk mempertahankan atribut width, style, class, & alt
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const ImageBlot = Quill.import('formats/image') as any;
 
     class AttributedImage extends ImageBlot {
@@ -76,16 +74,16 @@ const formats = [
   'blockquote',
   'list',
   'link',
-  'image', // Cukup 'image', atribut internalnya otomatis diproses oleh AttributedImage
+  'image',
 ];
 
 export default function ArticleEditor() {
   const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [heroImage, setHeroImage] = useState('');
   const [content, setContent] = useState('');
   const [isPublishing, setIsPublishing] = useState(false);
 
-
-  // State untuk Toast Notification
   const [toast, setToast] = useState<{
     show: boolean;
     type: 'success' | 'error';
@@ -102,9 +100,9 @@ export default function ArticleEditor() {
     setToast({ show: true, type, title, message });
   };
 
-const handlePublish = async () => {
-    if (!title.trim() || !content.trim()) {
-      showToast('error', 'Validasi Gagal', 'Judul dan konten artikel tidak boleh kosong.');
+  const handlePublish = async () => {
+    if (!title.trim() || !description.trim() || !content.trim()) {
+      showToast('error', 'Validasi Gagal', 'Judul, deskripsi, dan konten artikel tidak boleh kosong.');
       return;
     }
 
@@ -118,9 +116,9 @@ const handlePublish = async () => {
         },
         body: JSON.stringify({
           title,
-          description: '',
+          description,
           pubDate: new Date().toISOString().split('T')[0],
-          heroImage: '',
+          heroImage,
           content,
         }),
       });
@@ -145,6 +143,8 @@ const handlePublish = async () => {
       );
 
       setTitle('');
+      setDescription('');
+      setHeroImage('');
       setContent('');
     } catch (err: any) {
       showToast('error', 'Gagal Mempublikasikan', err.message);
@@ -155,8 +155,6 @@ const handlePublish = async () => {
 
   return (
     <div className="editor-container">
-
-{/* Toast Notification Container */}
       {toast.show && (
         <Toast
           type={toast.type}
@@ -166,7 +164,6 @@ const handlePublish = async () => {
         />
       )}
 
-      {/* Header Controls */}
       <div className="editor-header">
         <span className="draft-badge">Draft</span>
         <button
@@ -178,7 +175,6 @@ const handlePublish = async () => {
         </button>
       </div>
 
-      {/* Title Input */}
       <input
         type="text"
         placeholder="Judul Artikel..."
@@ -187,7 +183,22 @@ const handlePublish = async () => {
         className="title-input"
       />
 
-      {/* Quill Editor Wrapper */}
+      <textarea
+        placeholder="Deskripsi Singkat (Ringkasan Artikel)..."
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        className="description-input"
+        rows={2}
+      />
+
+      <input
+        type="text"
+        placeholder="URL Hero Image (Opsional, contoh: ../../assets/blog-placeholder-3.jpg)"
+        value={heroImage}
+        onChange={(e) => setHeroImage(e.target.value)}
+        className="meta-input"
+      />
+
       <div className="quill-minimal-wrapper">
         <ReactQuill
           theme="snow"
@@ -195,7 +206,7 @@ const handlePublish = async () => {
           onChange={setContent}
           modules={modules}
           formats={formats}
-          placeholder="Mulai menulis cerita Anda..."
+          placeholder="Mulai menulis Artikel..."
         />
       </div>
     </div>
