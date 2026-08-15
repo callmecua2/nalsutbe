@@ -128,6 +128,7 @@ export default function ArticleEditor() {
 
       try {
         result = JSON.parse(rawText);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (e) {
         throw new Error(`Server Error (${response.status}). Silakan periksa log server.`);
       }

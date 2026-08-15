@@ -43,9 +43,9 @@ export default function LoginPage() {
       }
 
       // Simpan token atau data user (opsional, contoh di localStorage)
-      if (data.token) {
-        localStorage.setItem("token", data.token);
-      }
+      // if (data.token) {
+      //   localStorage.setItem("token", data.token);
+      // }
 
       // Arahkan ke halaman utama setelah login sukses
       router.push("/editor")
@@ -63,7 +63,7 @@ export default function LoginPage() {
       <div className="login-card glass-container">
         <div className="login-header">
           <h1 className="login-title">Masuk Akun</h1>
-          <p className="login-subtitle">Silakan masuk untuk mengakses layanan Anda</p>
+          <p className="login-subtitle">Silahkan masuk untuk mengakses editor</p>
         </div>
 
         <form className="login-form" onSubmit={handleSubmit}>
