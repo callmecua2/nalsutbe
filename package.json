@@ -2,6 +2,7 @@
   "name": "nalsutbe",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -9,8 +10,12 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.9.1",
+    "@prisma/client": "^7.9.1",
     "bcryptjs": "^3.0.3",
+    "dotenv": "^17.4.2",
     "next": "16.2.12",
+    "pg": "^8.23.0",
     "quill-image-resize-module-react": "^3.0.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
@@ -18,11 +23,13 @@
   },
   "devDependencies": {
     "@types/node": "^20",
+    "@types/pg": "^8.21.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.12",
+    "prisma": "^7.9.1",
     "typescript": "^5"
   },
   "ignoreScripts": [

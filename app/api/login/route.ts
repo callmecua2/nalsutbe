@@ -1,15 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/prisma/prisma";
+import { randomBytes } from "node:crypto";
 
 interface login {
   username: string;
   password: string;
 }
-
-const UserName = process.env.APP_USERNAME
-const UserPassword = process.env.APP_PASSWORD
-const UserToken = "verylongpasswordtocheck"
-
-console.log(UserName, UserPassword)
 
 export async function POST (req : NextRequest) {
   try {
@@ -23,27 +19,21 @@ export async function POST (req : NextRequest) {
       );
     }
 
-    if(username !== UserName) {
+    const findUser = await prisma.user.findFirst({
+      where : {
+        name : username,
+        password : password
+      }
+    })
+
+    if(!findUser) {
       return NextResponse.json(
-        { message: "Username salah" },
-        { status: 400 },
-      );
+        {message : "User tidak ditemukan"},
+        {status : 404}
+      )
     }
 
-    if(password !== UserPassword) {
-      return NextResponse.json(
-        { message: "Password Salah" },
-        { status: 400 },
-      );
-    }
-
-    if(username !== UserName && password !== UserPassword) {
-      return NextResponse.json(
-        { message: "Username dan Password Salah" },
-        { status: 400 },
-      );
-    }
-
+    const UserToken = randomBytes(32).toString('hex')
     const response = NextResponse.json({ message: "Success" }, { status: 200 });
 
     response.cookies.set("userLogin", UserToken, {
