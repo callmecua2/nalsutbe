@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/prisma/prisma";
-import { randomBytes } from "node:crypto";
+// import { randomBytes } from "node:crypto";
 
 interface login {
   username: string;
@@ -22,7 +22,6 @@ export async function POST (req : NextRequest) {
     const findUser = await prisma.user.findFirst({
       where : {
         name : username,
-        password : password
       }
     })
 
@@ -33,10 +32,17 @@ export async function POST (req : NextRequest) {
       )
     }
 
-    const UserToken = randomBytes(32).toString('hex')
+    if(findUser.password !== password) {
+      return NextResponse.json(
+        {message : "Password salah, coba lagi"},
+        {status : 404}
+      )
+    }
+
+    // const UserToken = randomBytes(32).toString('hex')
     const response = NextResponse.json({ message: "Success" }, { status: 200 });
 
-    response.cookies.set("userLogin", UserToken, {
+    response.cookies.set("userLogin", username, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
